@@ -1,0 +1,77 @@
+---
+title: | 
+        | The Effect of Vitamin C on Tooth 
+        | Growth in Guinea Pigs
+author: "Andrew Reynolds"
+date: "September 23, 2015"
+output: pdf_document
+---
+
+## Overview
+
+Ten guinea pigs are given Vitamin C at three dose levels with each of two delivery methods (orange juice or ascorbic acid), and their tooth lengths are recorded each time. The `ToothGrowth` dataset is found in the R datasets package. We wish to use this dataset to compare the effects of dose and delivery method on the tooth length of guinea pigs.
+
+## Loading the data
+
+We load the `ToothGrowth` data and take quick look at it.
+
+```{r}
+data(ToothGrowth)
+head(ToothGrowth)
+```
+
+Details about the variables in this dataset can be found in its help page. The variables are tooth length (`len` numeric), supplement type (`supp` factor with levels VC and OJ), and dose in milligrams (`dose` numeric, 0.5, 1, and 2 mg).
+
+## Basic summary of the data
+
+First we summarize the response variable `len`.
+
+```{r}
+summary(ToothGrowth$len)
+```
+
+Next we give a scatterplot of dose versus length by delivery method.
+
+```{r fig.height = 3.5}
+require("lattice")
+xyplot(len ~ dose | supp, ToothGrowth)
+```
+
+We can see that higher doses correspond to longer teeth with both delivery methods. We also see that for a given dose (except for 2.0 mg), the OJ length was greater than the VC length. Let's view a boxplot of tooth length by delivery method.
+
+```{r fig.height = 3.5}
+plot(ToothGrowth$supp, ToothGrowth$len)
+```
+
+This plots shows a substantial difference in the median tooth length. The OJ group has longer teeth on average. We also observe that the range is slightly larger for the VC group, though the interquartile ranges are roughly equal for the two groups. 
+
+## Inferential Analyses
+
+We now test the above observations more formally. First we test whether there is a difference in the population means for tooth length across the two delivery methods. We perform a two-sided independent group hypothesis test. It seems reasonable to expect the population variances to be equal across the two delivery methods. Indeed, this assumption is supported by the above boxplot.
+
+```{r}
+t.test(len ~ supp, paired = FALSE, var.equal = TRUE, data = ToothGrowth)
+```
+
+We shall interpret this output in the "Conclusions" section below. At this time we test our other observation: that larger doses correspond to greater tooth length. Since there are three doses given, and not two, no single hypothesis test will suffice. Instead, let's compute the 95% confidence intervals for the mean tooth length at the three doses.
+
+```{r}
+x0.5 <- ToothGrowth[ToothGrowth$dose == 0.5,]$len
+x1.0 <- ToothGrowth[ToothGrowth$dose == 1.0,]$len
+x2.0 <- ToothGrowth[ToothGrowth$dose == 2.0,]$len 
+mean(x0.5) + c(-1,1)*qt(.975, length(x0.5) - 1)*sd(x0.5)/sqrt(length(x0.5))
+mean(x1.0) + c(-1,1)*qt(.975, length(x1.0) - 1)*sd(x0.5)/sqrt(length(x1.0))
+mean(x2.0) + c(-1,1)*qt(.975, length(x2.0) - 1)*sd(x0.5)/sqrt(length(x2.0))
+```
+
+The first confidence interval is for the 0.5 mg group, the second is for the 1.0 mg group, and the third is for the 2.0 mg group. We will interpret these confidence intervals below.
+
+## Conclusions and necessary assumptions
+
+Now we interpret the above analyses. First, the hypothesis test says if there is no difference in the true means of the two groups (OJ and VC), then the probability of obtaining our dataset would have been 0.06039. This probability is very close to the usual threshold of 0.05 for rejecting the null hypothesis. Thus our data provides quite strong evidence that there is actually a difference in the population means. The reader should remain skeptical of this claim, however, if he/she wishes to adhere strictly to the 0.05 threshold.
+
+As for the effect of dose on tooth length, we have the 95% confidence intervals computed in the previous section. We can see that these three intervals to not overlap. Thus we can say with at least 95% confidence that with each dose increase, there is a corresponding increase in tooth length.
+
+### Necessary assumptions
+
+We assume the guinea pigs in the study are representative of all guinea pigs (ie. that they are a random sample). We also assume that there is enough time between treatments that the individual observations are independent. 
